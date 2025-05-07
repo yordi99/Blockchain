@@ -1,0 +1,313 @@
+Arrays
+Solidity Arrays
+Working with arrays in Solidity can be tricky! We'll need to understand the data location, or where the array is stored. We'll also need to understand the memory allocation, whether it is fixed size or it can be dynamically resized. Don't you worry! We'll bring these concepts to light in this coding tutorial.
+1.Fixed Sum
+Fixed Arrays Fixed sized arrays have a set amount of values at compile-time. We can declare fixed size arrays in Solidity like so: uint[3] x = [1,2,3];
+address[1] y = [0xc783df8a850f42e7F7e57013759C285caa7
+01eB6]; 
+bool[4] z = [true, true, false, 
+false]; 
+These arrays have their size determined at compile-time. They cannot grow or shrink in size.
+ If you store less elements in the array than the fixed size, the rest of the elements will be the default value for the data type (i.e. false for bool and 0 for uint). If you store more elements in the array than the fixed size, you'll get a compile-time TypeError!
+The above array declarations will work for state variables. Inside of a function, however, we will need to specify the data location of an array: 
+uint[3] memory numbers = [1, 2, 3];
+The data location for this array is memory. Memory is temporary, it will only last as long as the transaction. The other data locations are calldata for referring to message call arguments and storage for persistence.
+Retrieve Elements We can also retrieve elements from our array with numerical indexes: 
+uint[3] memory numbers = [1, 2, 3];
+console.log(numbers[0]); // 1
+console.log(numbers[1]); // 2
+ For Loops For loops in Solidity have similar syntax as JavaScript and other C-family languages: 
+for(uint i = 0; i < 10; i++) { 
+// run statement
+ }
+2.Dynamic Sum
+Dynamically Sized Arrays We can also create arrays in Solidity where the size is unknown at compile-time. These arrays are said to have dynamic size. 
+For example: 
+import "forge-std/console.sol";
+contract Contract { 
+function logFriends(address[] 
+calldata friends) external view { 
+for(uint i = 0; i < 
+friends.length; i++) {
+ console.log(friends[i]); 
+}
+ }
+ }
+ Here we are able to log each address that is sent to the logFriends function. 
+We use the length member available on the array to determine the number of elements inside the dynamic sized array and then we use number indexes to retrieve the address.
+3.Filter to Storage
+Storage Arrays
+ With arrays in storage you can use the push member function to add a new element at the end. 
+import "forge-std/console.sol"; 
+contract Contract {
+ uint[] public numbers; 
+constructor() { 
+numbers.push(3);
+console.log(numbers.length); //
+1
+ numbers.push(4); 
+console.log(numbers.length); //
+2 
+console.log(numbers[0]); // 3
+console.log(numbers[1]); // 4 
+}
+ }
+ As you might expect the length member adjusts when new elements are pushed onto the end of the array.
+4.Filter to Memory
+Memory Arrays 
+Unlike storage arrays, memory arrays do not have a push member function.
+Memory arrays can have a dynamic size if the size is provided during initialization.
+ For example: 
+import "forge-std/console.sol"; 
+contract Contract { 
+uint x = 5; 
+function createArray() view
+external {
+address[] memory addresses =
+new address[](x); 
+console.log( addresses.length ); // 5 
+} 
+} 
+The size is dynamically provided by the variable x. We could potentially change this variable and it would create an array of addresses of that size. Notice the use of the new operator here during initialization!
+After initialization, memory arrays cannot be resized. This means even in the example above, once the addresses array is initialized at size 5, it will stay that length for the entirety of the transaction. 
+5.Stack Club 1
+Stack Club
+This StackClub contract will have many members like a club or an organization would. We'll track these members by keeping a list of addresses. Members will be added by pushing their address to the top of the list. Members will be removed by popping the most recent one off of the list. A Last-In-First-Out structure, just like a stack!
+6.Stack Club  2
+Pop 
+Storage arrays also have access the pop member variable:
+ import "forge-std/console.sol"; 
+contract Contract {
+ uint[] public numbers; 
+constructor() {
+ numbers.push(3); 
+numbers.push(4); 
+console.log(numbers.length); // 
+2
+ numbers.pop();
+ console.log(numbers.length); // 
+1 
+console.log(numbers[0]); // 3
+ } 
+} 
+As you can see, pop will take the top element off the storage array.
+Struct
+Structs provide Solidity Developers with a way to build custom data types. These data types can have multiple fields of data types we already have previously discussed.
+For example:
+struct Account {
+    uint balance;
+    bool isActive;}
+ This struct is composed of a uint and a bool. If this struct were defined outside of a contract, it can be shared across multiple contracts like so:
+struct Account {
+    uint balance
+    bool isActive;}
+contract A {
+    Account owner;
+    Account recipient;}
+contract B {
+    mapping (address => Account) accounts;}
+1.Vote Storage
+Structs
+ With structs we can create custom types in Solidity that are essentially groupings of variables.
+ For instance:
+ enum Directions { Up, Down, Left,
+ Right } 
+struct Hero {
+ Directions facing;
+ uint health; 
+bool inAir;
+ }
+ With this struct we can create new heroes which contain just these three properties.
+ We can create a new Hero by invoking the struct with parenthesis: Hero hero = Hero(Directions.Up, 100,
+ true);
+ Then we can use the . operator to retrieve values from the hero: console.log(hero.facing == 
+Directions.Up); // true 
+console.log(hero.health); // 100 
+console.log(hero.inAir); // true
+ Notice that the order of the parameters matters when creating a new struct, we could have also named the properties instead.
+2.Vote Memory
+Returning Structs
+When you're returning structs or other reference types like arrays, you have to clarify where the data is coming from using data location keywords: storage, memory, or calldata.
+However, for external and public methods, you can't use the storage keyword for the return parameter. The storage keyword would provide a direct reference to a location within the contract's own persistent storage, which cannot be accessed outside of the contract. Use memory or calldata instead to return a copy of the data.
+Let's take a look at an example of a struct being returned in memory: struct Hero { uint health }
+function postHero(Hero hero) external { 
+// take a Hero type as an external argument
+ console.log(hero.health); // 100 
+}
+function getHero() external view 
+returns (Hero memory) { 
+// return Hero in an external function 
+return Hero(100);
+ }
+3.Vote Array
+Struct Arrays We can create an array of struct types, just like we would with any other data type!
+// a dynamic size list of uints 
+uint[] numbers;
+struct Account {
+uint id; 
+uint balance; 
+}
+ // a dynamic size list of Accounts
+ Account[] accounts;
+ We can also push and retrieve accounts like any other storage array: accounts.push(Account(0, 100));
+ console.log(accounts[0].id); // 0 
+console.log(accounts[0].balance); // 100
+Of course, push only works on storage arrays, as we learned in the lesson on arrays!
+4.Choice Lookup
+Accessing Struct Properties 
+It's time to access some of the struct properties we stored! You can do this using the . operator. Let's see a few 
+examples: 
+import "forge-std/console.sol"; 
+contract X { 
+struct Human { 
+string name;
+ uint age; 
+} 
+Human human = Human("Dan", 33);
+ Human[] humans; 
+constructor() { 
+humans.push(human); 
+// read from this struct directly 
+console.log(human.name); // Dan
+ // read from the array of humans
+ console.log(humans[0].age); // 33 
+}
+ }
+Mapping
+Mappings are an important data type in Solidity. With a mapping we can take values of one data type and map them to values of another data type.
+Let's consider an example. Say you wanted to track balances of a bunch of addresses:
+ Based on what we have learned so far you might be thinking of creating an array of structs: 
+struct Account { 
+address addr;
+uint balance;
+ } 
+Account[] accounts; 
+This works, certainly. When we need to find an address balance we can iterate through the accounts to find the address we're looking for and retrieve the balance.
+However, there's a better way! We can use a mapping:
+mapping(address => uint) balances;
+With a mapping each address is mapped to a unique place in memory where it stores the uint balance. Looking up the balance is as simple as providing the address to the mapping: balances[addr].
+1.Add Member
+Mapping
+Mappings allow you to store and retrieve elements quickly with a key. The key points to a location in memory where the value is stored.
+The key can be any basic data type in Solidity. It cannot be a reference data type like a struct or an array. 
+The value, on the other hand, can be any Solidity type. It can be a struct, an array or even another mapping! 
+Let's see an example of a mapping:
+import "forge-std/console.sol"; 
+contract Contract { 
+// create a score state variable 
+// maps an address (key) to a uint
+ (value) 
+mapping(address => uint) public 
+score; 
+function addPoint() external {
+ // we're using msg.sender as
+ the key 
+// to look up the score in 
+Storage
+ console.log(score[msg.sender]);
+ // 0 
+// we can also update that location in storage
+ score[msg.sender]++;
+ console.log(score[msg.sender]);
+ // 1
+ }
+ } 
+The variable score takes an address and maps it to a uint. Each address will be mapped to its own unique uint value that it can retrieve and modify. 
+The addPoint function uses the msg.sender as the key to update a location in memory. This location in memory for a value is initialized at zero. We can add to it using the msg.sender as the key, as shown above.
+The score mapping is public which means that there will be a getter function created automatically. We can make a request to an Ethereum node invoking this getter function with an address and get a uint back.
+2.Is Member
+Mapping Retrieval 
+Compared to arrays retrieving a value from a mapping is quite simple! Consider: 
+mapping(address => bool) students;
+
+function isStudent(address addr)
+external view returns(bool) {
+return students[addr];
+ }
+Versus: 
+address[] students;
+function isStudent(address addr) 
+external view returns(bool) { 
+for(uint i = 0; i <
+students.length; i++) { 
+if(students[i] === addr) {
+return true; 
+} 
+} 
+return false; 
+}
+ To find if the student address is in the array we have to iterate over the array. For the mapping we can simply plug in the address. Choosing the right data structure is half the battle. It can help keep the code clean and use less gas! Curious how the value lookup for the mapping works under the hood? Let's take a look in details.
+3.Remove Member
+Mapping Removal 
+For arrays, removing elements can be an expensive operation, especially if you don't want to leave any gaps! 
+Let's say you had an array containing the unsigned integer values [1,2,3]. Removing the first element 1 would mean you would have to shift the values 2 and 3 down one position each. For a bigger array, this could mean many storage operations. Super expensive!
+ In this case you could use a Linked List where you can "stitch" the previous node to the next node instead of having to shift elements. For mappings, removal is quite simple. For example, in this students mapping: 
+mapping(address => bool) students;
+function removeStudent(address addr) 
+external { 
+students[addr] = false;
+} 
+4.Mapping to Struct
+Mapping to Struct
+Here's where mappings get interesting! We can map to many different types. Let's start with structs:
+ contract Market {
+ // create the Collectible struct 
+struct Collectible { 
+address owner; 
+bool forSale; 
+uint price; 
+} 
+// map a uint ID to a Collectible struct 
+mapping(uint => Collectible) 
+idToCollectible; 
+function purchase(uint _id) 
+external payable { 
+// find the collectible by the 
+id passed in 
+Collectible storage collectible 
+= idToCollectible[_id]; 
+// purchase the collectible 
+require(msg.value >= 
+collectible.price); 
+collectible.owner = msg.sender; 
+collectible.forSale = false; 
+} 
+} 
+We are able to lookup the collectible using the uint id passed into purchase. Then we have access to the struct to sell it to its new owner.
+5.Map Structs 2
+Types of Balances
+Broadly speaking, smart contracts deal with two type of value transfers: 
+1.the native currency (ether), which is stored and transferred using the native EVM mechanisms, the value in the message call, and the balance on an address 
+2.a storage value which can represent any kind of value on-chain, and is updated by modifying storage variables 
+In the smart contract you are building, you are maintaining your own balances in the User struct that has no relation to ether. This means, to transfer balances from one user to another, you can just update the struct value!
+6.Nested Maps
+Nested Mappings
+As shown in the previous stage, we can provide more complex types in our mapping values. 
+Last stage we showed it with structs, now let's try it with other mappings! 
+mapping(uint => mapping(address =>
+bool)) voteToAddressChoice; 
+function getVote(uint _id, address 
+_addr) 
+external 
+view 
+returns(bool) 
+{ 
+return voteToAddressChoice[_id]
+[_addr]; 
+} 
+In this scenario each vote id points to a mapping of addresses to bool votes. This allows each address to register a different vote with each vote id. As a voter we might call a function with an id to register our choice: 
+function registerVote(uint _id, bool 
+_choice) external { 
+voteToAddressChoice[_id]
+[msg.sender] = _choice; 
+} 
+Let's say there were 3 votes with the ids: 212, 72 and 409.
+ We could make the following calls from external the contract:
+ // for true for vote id 212 
+votingContract.registerVote(212, true);
+// for false for vote id 72 
+votingContract.registerVote(72, false); 
+// for true for vote id 409 
+votingContract.registerVote(409, true); 
+This would register a true for the ids 212 and 409 at our address. For 72 it would register false. 
+Of course, the default value for a bool is false, so this second vote may be pointless unless we were to add in some other way to provide an non-existent vote.
